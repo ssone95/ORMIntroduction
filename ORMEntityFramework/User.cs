@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace ORMEntityFramework
 {
-    public class User
+    public class User : BaseEntry
     {
-        [Key]
-        public int Id { get; set; }
-
         public string Name { get; set; }
 
         public string Email { get; set; }
         public UserAddress UserAddress { get; set; }
+
+
+        public ICollection<UserRole> UserRoles { get; set; }
 
     }
 }

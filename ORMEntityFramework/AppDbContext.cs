@@ -13,6 +13,10 @@ namespace ORMEntityFramework
         public DbSet<Address> Addresses { get; set; }
         public DbSet<UserAddress> UserAddresses { get; set; }
 
+        public DbSet<Role> Roles { get; set; }
+
+        public DbSet<UserRole> UserRoles { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MentorshipORMEntityFramework;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False");

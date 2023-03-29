@@ -7,11 +7,8 @@ using System.Threading.Tasks;
 
 namespace ORMEntityFramework
 {
-    public class Address
+    public class Address : BaseEntry
     {
-        [Key]
-        public int Id { get; set; }
-
         public string Street { get; set; }
 
         public string City { get; set; }

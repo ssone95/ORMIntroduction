@@ -22,6 +22,9 @@ namespace ORMEntityFramework
                         "d) Delete existing user's address\n" +
                         "e) Delete existing address\n" +
                         "l) List existing users\n\n" +
+                        "r) Create a new role\n\n" +
+                        "t) List roles\n\n" +
+                        "w) Assign role to user\n\n" +
                         "q) Quit");
 
                     string commandStr = Console.ReadLine();
@@ -75,6 +78,22 @@ namespace ORMEntityFramework
                                 PrintExistingUsers(dbContext);
                                 break;
                             }
+
+                        case 'r':
+                            {
+                                CreateRole(dbContext);
+                                break;
+                            }
+                        case 't':
+                            {
+                                ListRoles(dbContext);
+                                break;
+                            }
+                        case 'w':
+                            {
+                                AssignRoleToUser(dbContext);
+                                break;
+                            }
                         default:
                             {
                                 // Let the user know that they entered the incorrect command
@@ -82,6 +101,53 @@ namespace ORMEntityFramework
                             }
                     }
                 }
+            }
+        }
+
+        private static void AssignRoleToUser(AppDbContext dbContext)
+        {
+            Console.WriteLine($"Please enter the user id: ");
+            int userId = int.Parse(Console.ReadLine());
+            Console.WriteLine($"Please enter the role id: ");
+            int roleId = int.Parse(Console.ReadLine());
+
+            var existingRole = dbContext.UserRoles.Where(ur => ur.RoleId == roleId && ur.UserId == userId).SingleOrDefault();
+            if (existingRole == null)
+            {
+                var userRole = new UserRole()
+                {
+                    RoleId = roleId,
+                    UserId = userId,
+                    Active = true
+                };
+                dbContext.UserRoles.Add(userRole);
+                dbContext.SaveChanges();
+            }
+        }
+
+        private static Role CreateRole(AppDbContext dbContext)
+        {
+            var role = new Role() { Active = true };
+            Console.WriteLine($"Please enter the role name: ");
+            role.Name = Console.ReadLine();
+
+            dbContext.Roles.Add(role);
+
+            dbContext.SaveChanges();
+            return role;
+        }
+
+
+        private static void ListRoles(AppDbContext dbContext)
+        {
+            var roles = dbContext
+                .Roles
+                .Where(role => role.Active)
+                .ToList();
+
+            foreach (var role in roles)
+            {
+                Console.WriteLine($"Role Id: {role.Id}, Role Name: {role.Name}");
             }
         }
 
@@ -99,7 +165,7 @@ namespace ORMEntityFramework
                     var addressFromDb = dbContext.Addresses.SingleOrDefault(adr => adr.Id == addressId);
                     if (addressFromDb != null)
                     {
-                        dbContext.Addresses.Remove(addressFromDb);
+                        addressFromDb.Active = false;
                         dbContext.SaveChanges();
                     }
                 }
@@ -117,7 +183,7 @@ namespace ORMEntityFramework
                 var addressFromDb = dbContext.Addresses.SingleOrDefault(adr => adr.Id == addressId);
                 if (addressFromDb != null)
                 {
-                    dbContext.Addresses.Remove(addressFromDb);
+                    addressFromDb.Active = false;
                     dbContext.SaveChanges();
                 }
             } 
@@ -138,7 +204,8 @@ namespace ORMEntityFramework
             var user = new User()
             {
                 Name = name,
-                Email = email
+                Email = email,
+                Active = true
             };
 
             dbContext.Users.Add(user);
@@ -149,7 +216,7 @@ namespace ORMEntityFramework
         private static Address AddAddress(AppDbContext dbContext)
         {
 
-            var address = new Address();
+            var address = new Address() { Active = true };
             Console.WriteLine($"User, please let us know your City: ");
             address.City = Console.ReadLine();
 
@@ -183,7 +250,7 @@ namespace ORMEntityFramework
             } 
             else
             {
-                dbContext.UserAddresses.Add(new UserAddress { UserId = userId, AddressId = addressId });
+                dbContext.UserAddresses.Add(new UserAddress { UserId = userId, AddressId = addressId, Active = true });
                 dbContext.SaveChanges();
             }
         }
@@ -194,13 +261,38 @@ namespace ORMEntityFramework
                 .Users
                 .Include(user => user.UserAddress)
                 .ThenInclude(userAddres => userAddres.Address)
+                .Include(user => user.UserRoles)
+                .ThenInclude(userRole => userRole.Role)
+                .Where(user => user.Active)
                 .ToList();
 
             foreach (var usr in users)
             {
                 var address = usr.UserAddress?.Address;
-                Console.WriteLine($"User Id: {usr.Id}, Name: {usr.Name}, Email: {usr.Email}, AddressId: {address?.Id}, Address: {address?.Street}, {address?.City}, {address?.State}");
+                var userRolesList = GetUserRoles(usr);
+                Console.WriteLine($"User Id: {usr.Id}, Name: {usr.Name}, Email: {usr.Email}, AddressId: {address?.Id}, Address: {address?.Street}, {address?.City}, {address?.State}, Roles: [{userRolesList}]");
             }
+        }
+
+        private static string GetUserRoles(User user)
+        {
+            if (user == null)
+            {
+                return string.Empty;
+            }
+
+            if (user.UserRoles == null || user.UserRoles.Count < 1)
+            {
+                return string.Empty;
+            }
+
+            string allUserRoles = string.Empty;
+            foreach (var userRole in user.UserRoles)
+            {
+                allUserRoles += $"{userRole.Role?.Name},";
+            }
+
+            return allUserRoles;
         }
     }
 }

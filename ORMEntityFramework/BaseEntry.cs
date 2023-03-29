@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace ORMEntityFramework
 {
-    public class UserAddress : BaseEntry
+    public class BaseEntry
     {
-        public int UserId { get; set; }
-        public User User { get; set; }
-        public int AddressId { get; set; }
-        public Address Address { get; set; }
+        [Key]
+        public int Id { get; set; }
+
+        public bool Active { get; set; }
     }
 }
